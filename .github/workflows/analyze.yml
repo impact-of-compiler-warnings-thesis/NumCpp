@@ -1,0 +1,57 @@
+name: SonarCloud
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+      submodules: recursive
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v1
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install ninja-build \
+                           libtbb-dev \
+                           libboost-all-dev
+          dpkg -L libboost-system-dev
+      - name: Install Python 3.9
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+      - name: Prepare Conda
+        shell: bash
+        run: |
+          $CONDA/bin/conda init --all
+          $CONDA/bin/conda env update --file ${{github.workspace}}/test/pytest/environment.yml --name base
+      - name: Generate build files
+        run: |
+          mkdir build && cd build
+          cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug \
+                           -DCMAKE_CXX_STANDARD=${{inputs.cxx_std_version}} \
+                           -DBOOST_ROOT=${{inputs.boost_root}} \
+                           -DNUMCPP_NO_USE_BOOST=OFF \
+                           -DNUMCPP_USE_MULTITHREAD=OFF \
+                           -DBUILD_TESTS=ON \
+                           -DBUILD_MULTIPLE_TEST=ON \
+                           -DBUILD_EXAMPLE_README=ON \
+                           -DBUILD_EXAMPLE_GAUSS_NEWTON_NLLS=ON
+      - name: Run build-wrapper
+        run: |
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ninja -j $(nproc) -C build
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
