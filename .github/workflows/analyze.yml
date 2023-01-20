@@ -22,6 +22,9 @@ jobs:
         run: |
           sudo apt update
           sudo apt install ninja-build \
+                           libboost-all-dev \
+                           libeigen3-dev \
+                           libopencv-dev \
                            libtbb-dev
       - name: Install Python 3.9
         uses: actions/setup-python@v3
@@ -36,7 +39,7 @@ jobs:
         run: |
           mkdir build && cd build
           cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug \
-                           -DNUMCPP_NO_USE_BOOST=ON \
+                           -DNUMCPP_NO_USE_BOOST=OFF \
                            -DNUMCPP_USE_MULTITHREAD=OFF \
                            -DBUILD_TESTS=ON \
                            -DBUILD_MULTIPLE_TEST=ON \
