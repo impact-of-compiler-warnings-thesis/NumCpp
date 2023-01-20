@@ -22,10 +22,13 @@ jobs:
         run: |
           sudo apt update
           sudo apt install ninja-build \
-                           libboost-all-dev \
                            libeigen3-dev \
                            libopencv-dev \
                            libtbb-dev
+      - name: Install Boost
+        uses: MarkusJx/install-boost@v2.4.3
+        with:
+          boost_version: 1.80.0
       - name: Install Python 3.9
         uses: actions/setup-python@v3
         with:
