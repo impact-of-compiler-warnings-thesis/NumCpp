@@ -22,9 +22,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install ninja-build \
-                           libtbb-dev \
-                           libboost-all-dev
-          dpkg -L libboost-system-dev
+                           libtbb-dev
       - name: Install Python 3.9
         uses: actions/setup-python@v3
         with:
@@ -38,9 +36,7 @@ jobs:
         run: |
           mkdir build && cd build
           cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug \
-                           -DCMAKE_CXX_STANDARD=${{inputs.cxx_std_version}} \
-                           -DBOOST_ROOT=${{inputs.boost_root}} \
-                           -DNUMCPP_NO_USE_BOOST=OFF \
+                           -DNUMCPP_NO_USE_BOOST=ON \
                            -DNUMCPP_USE_MULTITHREAD=OFF \
                            -DBUILD_TESTS=ON \
                            -DBUILD_MULTIPLE_TEST=ON \
